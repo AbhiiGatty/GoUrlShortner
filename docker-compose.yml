@@ -1,0 +1,51 @@
+version: '3.6'
+services:
+  # Postgres Database
+  postgres-database:
+    build:
+      context: ./dockerfiles/database
+      dockerfile: ./Dockerfile
+    image: go_url_shortner_postgres:latest
+    container_name: service-db-psql
+    volumes:
+      - /Users/abhishekp/workspace/docker_volume/database/postgres/data/:/var/lib/postgresql/data/
+      - /Users/abhishekp/workspace/docker_volume/database/psql/custom_files/:/root/custom_files/
+    environment:
+      - PGPASSWORD=123456
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=123456
+    ports:
+      - "5434:5432"
+    stdin_open: true #  docker attach container_id
+    tty: true #  docker attach container_id
+    networks:
+      - default
+
+    # Golang Application
+  go-url-shortner-application:
+      build:
+        context: ./
+        dockerfile: ./dockerfiles/app/Dockerfile
+      image: go-url-shortner-application:latest
+      container_name: go-url-shortner-application
+      command: sh
+      entrypoint: /bin/sh -c
+      ports:
+        - "9000:8080"
+      environment:
+        # Stage Dependent values (Prod/Staging/Local)
+        - HOSTNAME=localhost
+        - ENVIRONMENT=test
+        # Postgres Database Credentials
+        - POSTGRES_DB_HOST=
+        - POSTGRES_DB_NAME=
+        - POSTGRES_DB_PORT=
+        - POSTGRES_DB_USERNAME=
+        - POSTGRES_DB_PASSWORD=
+      stdin_open: true #  docker attach container_id
+      tty: true #  docker attach container_id
+
+networks:
+  default:
+    external:
+      name: docker-internal-network

@@ -1,0 +1,36 @@
+FROM golang:1.12-alpine AS build_base
+
+RUN apk add --no-cache git gcc
+
+# Set the Current Working Directory inside the container
+WORKDIR /tmp/GoUrlShortner
+
+# We want to populate the module cache based on the go.{mod,sum} files.
+COPY go.mod .
+COPY go.sum .
+
+RUN go mod download
+
+COPY ./cmd/main.go ./
+
+# Unit tests
+# RUN CGO_ENABLED=0 go test -v
+
+# Build the Go app
+ENV GOOS=linux
+ENV GOARCH=amd64
+
+RUN go build -o ./out/GoUrlShortner ./main.go
+
+# Start fresh from a smaller image
+FROM alpine:3.9
+RUN apk add ca-certificates
+
+
+COPY --from=build_base /tmp/GoUrlShortner/out/GoUrlShortner /app/GoUrlShortner
+
+# This container exposes port 8080 to the outside world
+EXPOSE 8080
+
+# Run the binary program produced by `go install`
+CMD ["/app/GoUrlShortner"]
