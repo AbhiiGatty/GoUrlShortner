@@ -20,17 +20,19 @@ COPY ./cmd/main.go ./
 ENV GOOS=linux
 ENV GOARCH=amd64
 
-RUN go build -o ./out/GoUrlShortner ./main.go
+RUN go build -o ./binary_executable/GoUrlShortner ./main.go
 
 # Start fresh from a smaller image
 FROM alpine:3.9
 RUN apk add ca-certificates
 
+# Set the Current Working Directory inside the container
+WORKDIR /app/
 
-COPY --from=build_base /tmp/GoUrlShortner/out/GoUrlShortner /app/GoUrlShortner
+COPY --from=build_base /tmp/GoUrlShortner/binary_executable/GoUrlShortner /app/GoUrlShortner
 
 # This container exposes port 8080 to the outside world
 EXPOSE 8080
 
-# Run the binary program produced by `go install`
-CMD ["/app/GoUrlShortner"]
+# Run the binary_executable program produced by `go build`
+ENTRYPOINT ["/app/GoUrlShortner"]

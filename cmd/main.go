@@ -4,17 +4,21 @@ import (
 	"database/sql"
 	"fmt"
 	_ "github.com/lib/pq"
+	"os"
 )
 
 func main() {
-	fmt.Println("Hello World!")
 	checkDatabaseConnection()
 }
 
 func checkDatabaseConnection() {
-	return
 	// connection string
-	connStr := "user=postgres dbname=connect-db password=secure-password host=localhost sslmode=disable"
+	connStr := fmt.Sprintf("user=%s dbname=%s password=%s host=%s sslmode=disable",
+		os.Getenv("POSTGRES_DB_USERNAME"),
+		os.Getenv("POSTGRES_DB_NAME"),
+		os.Getenv("POSTGRES_DB_PASSWORD"),
+		os.Getenv("POSTGRES_DB_HOST"),
+	)
 	// connect to the database
 	db, err := sql.Open("postgres", connStr)
 	// If error is returned then panic

@@ -9,13 +9,13 @@ services:
     container_name: service-db-psql
     volumes:
       - /Users/abhishekp/workspace/docker_volume/database/postgres/data/:/var/lib/postgresql/data/
-      - /Users/abhishekp/workspace/docker_volume/database/psql/custom_files/:/root/custom_files/
+      - /Users/abhishekp/workspace/docker_volume/database/postgres/custom_files/:/root/custom_files/
     environment:
       - PGPASSWORD=123456
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=123456
     ports:
-      - "5434:5432"
+      - "6000:5432"
     stdin_open: true #  docker attach container_id
     tty: true #  docker attach container_id
     networks:
@@ -28,22 +28,23 @@ services:
         dockerfile: ./dockerfiles/app/Dockerfile
       image: go-url-shortner-application:latest
       container_name: go-url-shortner-application
-      command: sh
-      entrypoint: /bin/sh -c
-      ports:
-        - "9000:8080"
+      entrypoint: /bin/sh
       environment:
         # Stage Dependent values (Prod/Staging/Local)
         - HOSTNAME=localhost
         - ENVIRONMENT=test
         # Postgres Database Credentials
-        - POSTGRES_DB_HOST=
-        - POSTGRES_DB_NAME=
-        - POSTGRES_DB_PORT=
-        - POSTGRES_DB_USERNAME=
-        - POSTGRES_DB_PASSWORD=
+        - POSTGRES_DB_HOST=service-db-psql
+        - POSTGRES_DB_NAME=go_url_shortner
+        - POSTGRES_DB_PORT=5432
+        - POSTGRES_DB_USERNAME=postgres
+        - POSTGRES_DB_PASSWORD=123456
+      ports:
+        - "9000:8080"
       stdin_open: true #  docker attach container_id
       tty: true #  docker attach container_id
+      networks:
+        - default
 
 networks:
   default:

@@ -16,3 +16,7 @@
 
 # Environment varibles and secrets
 .env
+
+# IDE settings
+.idea
+idea/*
