@@ -16,6 +16,7 @@
 
 # Environment varibles and secrets
 .env
+.DS_Store
 
 # IDE settings
 .idea

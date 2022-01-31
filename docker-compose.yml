@@ -3,8 +3,8 @@ services:
   # Postgres Database
   postgres-database:
     build:
-      context: ./dockerfiles/database
-      dockerfile: ./Dockerfile
+      context: ./
+      dockerfile: ./setup/dockerfiles/database/Dockerfile
     image: go_url_shortner_postgres:latest
     container_name: service-db-psql
     volumes:
@@ -25,20 +25,24 @@ services:
   go-url-shortner-application:
       build:
         context: ./
-        dockerfile: ./dockerfiles/app/Dockerfile
+        dockerfile: ./setup/dockerfiles/app/Dockerfile
       image: go-url-shortner-application:latest
       container_name: go-url-shortner-application
       entrypoint: /bin/sh
+      volumes:
+        - /Users/abhishekp/workspace/GoUrlShortner/setup/resource/:/root/workspace/GoUrlShortner/setup/resource/
       environment:
         # Stage Dependent values (Prod/Staging/Local)
         - HOSTNAME=localhost
-        - ENVIRONMENT=test
+        - ENVIRONMENT=local
         # Postgres Database Credentials
         - POSTGRES_DB_HOST=service-db-psql
         - POSTGRES_DB_NAME=go_url_shortner
         - POSTGRES_DB_PORT=5432
-        - POSTGRES_DB_USERNAME=postgres
-        - POSTGRES_DB_PASSWORD=123456
+        - POSTGRES_DB_USERNAME=gus_user
+        - POSTGRES_DB_PASSWORD=gus_user@123
+        # File conatining urls to mock valid urls being provided
+        - MOCK_URL_FILE_PATH=/root/workspace/GoUrlShortner/setup/resource/URLS-200.txt
       ports:
         - "9000:8080"
       stdin_open: true #  docker attach container_id
