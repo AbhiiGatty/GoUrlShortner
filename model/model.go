@@ -1,7 +1,7 @@
 package model
 
 const (
-	production = `production`
-	staging = `staging`
-	local = `local`
+	Production = `production`
+	Staging = `staging`
+	Local = `local`
 )

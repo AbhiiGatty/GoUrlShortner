@@ -22,14 +22,16 @@ func main() {
 		err := db.Close()
 		// If error is returned closing connection to the database then just log the error
 		if err != nil {
-			log.Error("Error: Not able to close connection to database - " + os.Getenv("POSTGRES_DB_NAME"))
+			errorMessage := fmt.Sprintf("Error: Not able to close connection to database - %s", os.Getenv("POSTGRES_DB_NAME"))
+			log.Error(errorMessage)
 		}else{
-			log.Info("Successfully disconnected to database - " + os.Getenv("POSTGRES_DB_NAME"))
+			successMessage := fmt.Sprintf("Successfully disconnected to database - %s", os.Getenv("POSTGRES_DB_NAME"))
+			log.Info(successMessage)
 		}
 	}(database.DBCon)
 	
 	// We will emulate that we are sending many requests with a long url of varying length
-	if os.Getenv("ENVIRONMENT") == model.local{
+	if os.Getenv("ENVIRONMENT") == model.Local{
 		// This will only be done for local development to see some values in database to make
 		// sure everything is working as expected
 		populateUrlMapTable()
@@ -53,7 +55,8 @@ func intializeDatabaseConnection() {
 
 	// If error is returned while connecting to the database then log and raise run time error
 	if err != nil {
-		log.Error("Error: Not able to connect to database - " + os.Getenv("POSTGRES_DB_NAME"))
+		errorMessage := fmt.Sprintf("Error: Not able to connect to database - %s", os.Getenv("POSTGRES_DB_NAME"))
+		log.Error(errorMessage)
 		panic(err)
 	}
 
@@ -61,11 +64,12 @@ func intializeDatabaseConnection() {
 	err = database.DBCon.Ping()
 	// If error is returned while pinging the database then log and raise run time error
 	if err != nil {
-		log.Error("Error: Not able to ping the database - " + os.Getenv("POSTGRES_DB_NAME"))
+		errorMessage := fmt.Sprintf("Error: Not able to ping the database - %s", os.Getenv("POSTGRES_DB_NAME"))
+		log.Error(errorMessage)
 		panic(err)
 	}
 	// Display success message
-	log.Info("Successfully connected to database -> " + os.Getenv("POSTGRES_DB_NAME"))
+	log.Info("Successfully connected from database -> " + os.Getenv("POSTGRES_DB_NAME"))
 }
 
 
@@ -106,7 +110,7 @@ func populateUrlMapTable(){
 func generateShortUrlCode(url string) string {
 	// Create a SHA256 hash of the url and return it
 	// Here we only use the first 7 characters out of 64 character
-	shortUrlCode := xhashes.SHA256(url)[0:7]
+	shortUrlCode := string(xhashes.SHA256(url)[0:7])
 	// Insert the short code into the database
 	sqlStatement := `INSERT INTO url_map("fullUrl", "shortUrlCode") VALUES ($1, $2)`
 	_, err := database.DBCon.Exec(sqlStatement, url, shortUrlCode)
@@ -115,7 +119,8 @@ func generateShortUrlCode(url string) string {
 		log.Error(errorMessage)
 		log.Error(err)
 	}else{
-		log.Info(url + " -> " + shortUrlCode)
+		Successmessage := fmt.Sprintf("Inserted ShortUrlCode: %s for URL: %s", shortUrlCode, url)
+		log.Info(Successmessage)
 	}
 	//Return the short code generate for the URL
 	return shortUrlCode
