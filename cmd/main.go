@@ -10,6 +10,8 @@ import (
 	log "github.com/sirupsen/logrus"
 	"os"
 	"github.com/shomali11/util/xhashes"
+	"sync"
+	"time"
 )
 
 func main() {
@@ -74,6 +76,7 @@ func intializeDatabaseConnection() {
 
 
 func populateUrlMapTable(){
+	defer timeTrack(time.Now(), "populateUrlMapTable")
 	// Get the file handler on the file which contains a lot of URL samples
 	file, err := os.Open(os.Getenv("MOCK_URL_FILE_PATH"))
 	// Check for errors while opening
@@ -87,24 +90,22 @@ func populateUrlMapTable(){
 
 	// Read the file content
 	scanner := bufio.NewScanner(file)
+	var wg sync.WaitGroup
 
-	// We only want to read N (limit) number of lines
-	count := 0
-	limit := 10
 	// Get the file line by line
 	for scanner.Scan() {
+		wg.Add(1)
 		// Create short code for each url
-		generateShortUrlCode(scanner.Text())
-		// Increment the count and check if it has reached the limit
-		count++
-		if count > limit {
-			break
-		}
+		go func(url string) {
+			generateShortUrlCode(url)
+			wg.Done()
+		}(scanner.Text())
 	}
 	// If there are any errors while reading the file then log it and return
 	if err := scanner.Err(); err != nil {
 		log.Error(err)
 	}
+	wg.Wait()
 }
 
 func generateShortUrlCode(url string) string {
@@ -124,4 +125,9 @@ func generateShortUrlCode(url string) string {
 	}
 	//Return the short code generate for the URL
 	return shortUrlCode
+}
+
+func timeTrack(start time.Time, name string) {
+	elapsed := time.Since(start)
+	log.Printf("%s took %s", name, elapsed)
 }
