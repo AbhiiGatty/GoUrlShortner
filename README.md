@@ -48,27 +48,27 @@ $ make attach_to_db
 
 # The following commands are run inside Postgres application container
 $ psql -U postgres
-
-# Create a custom user for the project
+```
+```postgresql
+-- Create a custom user for the project
 CREATE ROLE gus_user;
 ALTER USER "gus_user" WITH PASSWORD 'gus_user@123';
 ALTER ROLE "gus_user" WITH LOGIN;
-# Create the database
+-- Create the database
 CREATE DATABASE go_url_shortner;
-# Connect to the database
+-- Connect to the database
 \c go_url_shortner;
-# Create table
+-- Create table
 CREATE TABLE url_map (
 	id serial PRIMARY KEY,
 	"fullUrl" VARCHAR (2048) UNIQUE NOT NULL,
 	"shortUrlCode" VARCHAR (7) NOT NULL UNIQUE,
 	"createdAt" TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
-# Give gus_user permission to access all data
+-- Give gus_user permission to access all data
 GRANT USAGE ON SCHEMA public TO gus_user;
 GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO gus_user;
 GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO gus_user;
-
 ```
 3. Execute the GoLang application
 ```bash

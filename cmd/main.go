@@ -10,14 +10,17 @@ import (
 	log "github.com/sirupsen/logrus"
 	"os"
 	"github.com/shomali11/util/xhashes"
-	"sync"
 	"time"
+	"strings"
 )
 
 func main() {
 	// Initialize logger to print messages to console
 	log.SetFormatter(&log.JSONFormatter{})
-	//// Check database connection
+	// Only log the warning severity or above.
+	//log.SetLevel(log.WarnLevel)
+
+	// Check database connection
 	intializeDatabaseConnection()
 	// This will run db.close() before the main function call ends
 	defer func(db *sql.DB) {
@@ -71,12 +74,15 @@ func intializeDatabaseConnection() {
 		panic(err)
 	}
 	// Display success message
-	log.Info("Successfully connected from database -> " + os.Getenv("POSTGRES_DB_NAME"))
+	successMessage := fmt.Sprintf("Successfully connected from database - %s", os.Getenv("POSTGRES_DB_NAME"))
+	log.Info(successMessage)
 }
 
 
 func populateUrlMapTable(){
+	// Display the amount of time taken to insert all the entires into the database
 	defer timeTrack(time.Now(), "populateUrlMapTable")
+
 	// Get the file handler on the file which contains a lot of URL samples
 	file, err := os.Open(os.Getenv("MOCK_URL_FILE_PATH"))
 	// Check for errors while opening
@@ -88,41 +94,40 @@ func populateUrlMapTable(){
 		defer file.Close()
 	}
 
-	// Read the file content
+	// Create scanner to read the file content
 	scanner := bufio.NewScanner(file)
-	var wg sync.WaitGroup
 
-	// Get the file line by line
-	for scanner.Scan() {
-		wg.Add(1)
-		// Create short code for each url
-		go func(url string) {
-			generateShortUrlCode(url)
-			wg.Done()
-		}(scanner.Text())
+	// Query format to insert the short code into the database
+	sqlStatement := `INSERT INTO url_map("fullUrl", "shortUrlCode") VALUES `
+	for scanner.Scan(){
+		// Read line from file
+		urlToShorten := scanner.Text()
+		// Generate shortcode for url
+		shortUrlCode := generateShortUrlCode(urlToShorten)
+		// Append to the query format and extend it as well
+		sqlStatement = sqlStatement + ", ('" + urlToShorten + "'"+ ", '" + shortUrlCode + "')"
 	}
+	// Clean the query
+	sqlStatement = strings.ReplaceAll(sqlStatement, "VALUES , (", "VALUES (")
+
+	// Insert the query into the database
+	_, err = database.DBCon.Exec(sqlStatement)
+	if err != nil {
+		errorMessage := fmt.Sprintf("Error While Inserting!")
+		log.Error(errorMessage)
+		log.Error(err)
+	}
+
 	// If there are any errors while reading the file then log it and return
 	if err := scanner.Err(); err != nil {
 		log.Error(err)
 	}
-	wg.Wait()
 }
 
 func generateShortUrlCode(url string) string {
 	// Create a SHA256 hash of the url and return it
 	// Here we only use the first 7 characters out of 64 character
 	shortUrlCode := string(xhashes.SHA256(url)[0:7])
-	// Insert the short code into the database
-	sqlStatement := `INSERT INTO url_map("fullUrl", "shortUrlCode") VALUES ($1, $2)`
-	_, err := database.DBCon.Exec(sqlStatement, url, shortUrlCode)
-	if err != nil {
-		errorMessage := fmt.Sprintf("Error While inseting: %s -> %s", url, shortUrlCode)
-		log.Error(errorMessage)
-		log.Error(err)
-	}else{
-		Successmessage := fmt.Sprintf("Inserted ShortUrlCode: %s for URL: %s", shortUrlCode, url)
-		log.Info(Successmessage)
-	}
 	//Return the short code generate for the URL
 	return shortUrlCode
 }

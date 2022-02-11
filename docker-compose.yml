@@ -1,15 +1,11 @@
-version: '3.6'
+version: '3.7'
 services:
   # Postgres Database
   postgres-database:
-    build:
-      context: ./
-      dockerfile: ./setup/dockerfiles/database/Dockerfile
-    image: go_url_shortner_postgres:latest
-    container_name: service-db-psql
+    image: postgres:13
+    container_name: service-postgres-database
     volumes:
-      - /Users/abhishekp/workspace/docker_volume/database/postgres/data/:/var/lib/postgresql/data/
-      - /Users/abhishekp/workspace/docker_volume/database/postgres/custom_files/:/root/custom_files/
+      - docker-postgres-database:/var/lib/postgresql/data/
     environment:
       - PGPASSWORD=123456
       - POSTGRES_USER=postgres
@@ -28,15 +24,17 @@ services:
         dockerfile: ./setup/dockerfiles/app/Dockerfile
       image: go-url-shortner-application:latest
       container_name: go-url-shortner-application
-      entrypoint: /bin/sh
+      entrypoint: /bin/sh psql -U postgres
+      depends_on:
+        - postgres-database
       volumes:
-        - /Users/abhishekp/workspace/GoUrlShortner/setup/resource/:/root/workspace/GoUrlShortner/setup/resource/
+        - ./setup/resource/:/root/workspace/GoUrlShortner/setup/resource/
       environment:
         # Stage Dependent values (Prod/Staging/Local)
         - HOSTNAME=localhost
         - ENVIRONMENT=local
         # Postgres Database Credentials
-        - POSTGRES_DB_HOST=service-db-psql
+        - POSTGRES_DB_HOST=service-postgres-database
         - POSTGRES_DB_NAME=go_url_shortner
         - POSTGRES_DB_PORT=5432
         - POSTGRES_DB_USERNAME=gus_user
@@ -52,5 +50,9 @@ services:
 
 networks:
   default:
-    external:
-      name: docker-internal-network
+    name: docker-internal-network
+
+volumes:
+  docker-postgres-database:
+    name: docker-postgres-database
+    external: true

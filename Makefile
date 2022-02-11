@@ -20,7 +20,16 @@ start_all:
 	docker-compose up -d
 
 attach_to_db:
-	docker exec -it service-db-psql bash
+	docker exec -it service-postgres-database bash
 
 attach_to_app:
 	docker exec -it go-url-shortner-application sh
+
+stop_all:
+	docker-compose down
+
+stop_db:
+	docker-compose down postgres-database
+
+stop_app:
+	docker-compose down go-url-shortner-application
