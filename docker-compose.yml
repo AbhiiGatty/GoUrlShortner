@@ -24,7 +24,7 @@ services:
         dockerfile: ./setup/dockerfiles/app/Dockerfile
       image: go-url-shortner-application:latest
       container_name: go-url-shortner-application
-      entrypoint: /bin/sh psql -U postgres
+      entrypoint: /bin/sh
       depends_on:
         - postgres-database
       volumes:
